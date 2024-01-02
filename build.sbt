@@ -13,7 +13,7 @@ lazy val root = (project in file("."))
       "edu.berkeley.cs" %% "chisel3" % chiselVersion,
       "edu.berkeley.cs" %% "chiseltest" % "0.5.4" % "test"
     ),
-    libraryDependencies += "cn.ac.ios.tis" %% "riscvspeccore" % "1.1-SNAPSHOT",
+    // libraryDependencies += "cn.ac.ios.tis" %% "riscvspeccore" % "1.1-SNAPSHOT",
     scalacOptions ++= Seq(
       "-language:reflectiveCalls",
       "-deprecation",
