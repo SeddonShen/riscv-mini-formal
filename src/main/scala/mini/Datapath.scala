@@ -90,8 +90,7 @@ class Datapath(val conf: CoreConfig) extends Module {
       (io.ctrl.pc_sel === PC_0) -> pc
     )
   )
-  val inst =
-    Mux(started || io.ctrl.inst_kill || brCond.io.taken || csr.io.expt, Instructions.NOP, io.icache.resp.bits.data)
+  val inst = Mux(started || io.ctrl.inst_kill || brCond.io.taken || csr.io.expt, Instructions.NOP, io.icache.resp.bits.data)
   pc := next_pc
   io.icache.req.bits.addr := next_pc
   io.icache.req.bits.data := 0.U
@@ -151,6 +150,7 @@ class Datapath(val conf: CoreConfig) extends Module {
 
   // Pipelining
   when(reset.asBool || !stall && csr.io.expt) {
+    printf("reset: %x stall:%x expt: %x\n", reset.asBool, stall, csr.io.expt)
     st_type := 0.U
     ld_type := 0.U
     wb_en := false.B
@@ -226,16 +226,25 @@ class Datapath(val conf: CoreConfig) extends Module {
 
   val FormalConfig = RV64Config("MCS")
   println(FormalConfig)
-  // val checker = Module(new CheckerWithResult(checkMem = true)(FormalConfig))
-  // ConnectCheckerResult.setChecker(checker)(32, FormalConfig)
-  // val resultTLBWireDTLB = rvspeccore.checker.ConnectCheckerResult.makeTLBSource(false)(64)
-  // val resultTLBWireITLB = rvspeccore.checker.ConnectCheckerResult.makeTLBSource(true)(64)
-  // resultTLBWireDTLB := DontCare
-  // resultTLBWireITLB := DontCare
+  val checker = Module(new CheckerWithResult(checkMem = true)(FormalConfig))
+  ConnectCheckerResult.setChecker(checker)(32, FormalConfig)
+  val resultTLBWireDTLB = rvspeccore.checker.ConnectCheckerResult.makeTLBSource(false)(64)
+  val resultTLBWireITLB = rvspeccore.checker.ConnectCheckerResult.makeTLBSource(true)(64)
+  resultTLBWireDTLB := DontCare
+  resultTLBWireITLB := DontCare
     // //  FIXME: valid need to judge
-  //  checker.io.instCommit.valid := true.B
-  //  checker.io.instCommit.inst  := ew_reg.inst
-  //  checker.io.instCommit.pc    := ew_reg.pc
+  when(RegNext(RegNext((started || io.ctrl.inst_kill || brCond.io.taken || csr.io.expt), true.B), true.B)){
+    checker.io.instCommit.valid := false.B
+  }otherwise{
+    when(!stall && !csr.io.expt){
+      printf("PC: %x Inst: %x\n", ew_reg.pc, ew_reg.inst)
+      checker.io.instCommit.valid := true.B
+    }.otherwise{
+      checker.io.instCommit.valid := false.B
+    }
+  }
+   checker.io.instCommit.inst  := ew_reg.inst
+   checker.io.instCommit.pc    := ew_reg.pc
    // riscv-mini does not have mmu
   //  找到Valid 或者说是commit的信号
   //  printf(
@@ -253,21 +262,27 @@ class Datapath(val conf: CoreConfig) extends Module {
   //    inst
   //  )
 
-   printf(
-     "Start: %x, PC[0]: %x, INST[0]: %x, PC[1]: %x, INST[1]: %x, PC[2]: %x, INST[2]: %x, Next PC: %x, Stall: %x PCSel: %x %x %x %x %x Control Inst: %x\n",
-     started,
-     pc,
-     inst,
-     fe_reg.pc,
-     fe_reg.inst,
-     ew_reg.pc,
-     ew_reg.inst,
-     next_pc,
-     stall,
-     stall, csr.io.expt, (io.ctrl.pc_sel === PC_EPC), ((io.ctrl.pc_sel === PC_ALU) || (brCond.io.taken)), (io.ctrl.pc_sel === PC_0),
-     io.ctrl.inst
-    //  io.ctrl.inst := fe_reg.inst
-   )
+  //  printf(
+  //    "InstInValid: %x, InstSel: %x %x %x %x, Start: %x, PC[0]: %x, INST[0]: %x, PC[1]: %x, INST[1]: %x, PC[2]: %x, INST[2]: %x, Next PC: %x, Stall: %x PCSel: %x %x %x %x %x Control Inst: %x, Wen: %x , Waddr: %x, Data: %x Valid: %x\n",
+  //    RegNext(RegNext((started || io.ctrl.inst_kill || brCond.io.taken || csr.io.expt), true.B), true.B),
+  //    started, io.ctrl.inst_kill, brCond.io.taken, csr.io.expt,
+  //    started,
+  //    pc,
+  //    inst,
+  //    fe_reg.pc,
+  //    fe_reg.inst,
+  //    ew_reg.pc,
+  //    ew_reg.inst,
+  //    next_pc,
+  //    stall,
+  //    stall, csr.io.expt, (io.ctrl.pc_sel === PC_EPC), ((io.ctrl.pc_sel === PC_ALU) || (brCond.io.taken)), (io.ctrl.pc_sel === PC_0),
+  //    io.ctrl.inst,
+  //    regFile.io.wen,
+  //    wb_rd_addr,
+  //    regFile.io.wdata,
+  //    RegNext(RegNext(RegNext(started, false.B), false.B),false.B)
+  //   //  io.ctrl.inst := fe_reg.inst
+  //  )
   // val isRead  = RegInit(false.B)
   // val isWrite = RegInit(false.B)
   // val addr    = RegInit(0.U(39.W))

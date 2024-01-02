@@ -145,7 +145,7 @@ class ControlSignals extends Bundle {
 class Control extends Module {
   val io = IO(new ControlSignals)
   val ctrlSignals = ListLookup(io.inst, Control.default, Control.map)
-  printf("Control inst: %x PCSel: %x\n", io.inst, io.pc_sel)
+  // printf("Control inst: %x PCSel: %x\n", io.inst, io.pc_sel)
   // Control signals for Fetch
   io.pc_sel := ctrlSignals(0)
   io.inst_kill := ctrlSignals(6).asBool
