@@ -19,6 +19,7 @@ class CoreTester(core: => Core, benchmark: String, trace: Boolean = false) exten
   dut.io.host.fromhost.valid := false.B
 
   val imem = Mem(1 << 20, UInt(xlen.W))
+  println("Loading " + os.pwd.toString() + "/" + resizedHexFile.toString() + " into instruction memory...")
   loadMemoryFromFileInline(imem, resizedHexFile.toString())
   val dmem = Mem(1 << 20, UInt(xlen.W))
   loadMemoryFromFileInline(dmem, resizedHexFile.toString())

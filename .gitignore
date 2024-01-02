@@ -31,3 +31,7 @@ tests/64/*
 novas_dump.log
 ucli.key
 
+# Metals Sbt
+project/metals.sbt
+project/project/metals.sbt
+project/project/project/metals.sbt

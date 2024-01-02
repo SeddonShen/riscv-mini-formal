@@ -5,6 +5,8 @@ package mini
 import chisel3._
 import chisel3.util._
 import chisel3.experimental.BundleLiterals._
+import rvspeccore.core.RV64Config
+import rvspeccore.checker._
 
 object Const {
   val PC_START = 0x200
@@ -221,4 +223,90 @@ class Datapath(val conf: CoreConfig) extends Module {
 //      Mux(regFile.io.wen, regFile.io.wdata, 0.U)
 //    )
 //  }
+
+  val FormalConfig = RV64Config("MCS")
+  println(FormalConfig)
+  // val checker = Module(new CheckerWithResult(checkMem = true)(FormalConfig))
+  // ConnectCheckerResult.setChecker(checker)(32, FormalConfig)
+  // val resultTLBWireDTLB = rvspeccore.checker.ConnectCheckerResult.makeTLBSource(false)(64)
+  // val resultTLBWireITLB = rvspeccore.checker.ConnectCheckerResult.makeTLBSource(true)(64)
+  // resultTLBWireDTLB := DontCare
+  // resultTLBWireITLB := DontCare
+    // //  FIXME: valid need to judge
+  //  checker.io.instCommit.valid := true.B
+  //  checker.io.instCommit.inst  := ew_reg.inst
+  //  checker.io.instCommit.pc    := ew_reg.pc
+   // riscv-mini does not have mmu
+  //  找到Valid 或者说是commit的信号
+  //  printf(
+  //    "PC: %x, INST: %x, REG[%d] <- %x Next PC: %x stall:%d, FEPC: %x, FEInst: %x Started: %d, PC: %x Inst: %x\n",
+  //    ew_reg.pc,
+  //    ew_reg.inst,
+  //    Mux(regFile.io.wen, wb_rd_addr, 0.U),
+  //    Mux(regFile.io.wen, regFile.io.wdata, 0.U),
+  //    next_pc,
+  //    stall,
+  //    fe_reg.pc,
+  //    fe_reg.inst,
+  //    started,
+  //    pc,
+  //    inst
+  //  )
+
+   printf(
+     "Start: %x, PC[0]: %x, INST[0]: %x, PC[1]: %x, INST[1]: %x, PC[2]: %x, INST[2]: %x, Next PC: %x, Stall: %x PCSel: %x %x %x %x %x Control Inst: %x\n",
+     started,
+     pc,
+     inst,
+     fe_reg.pc,
+     fe_reg.inst,
+     ew_reg.pc,
+     ew_reg.inst,
+     next_pc,
+     stall,
+     stall, csr.io.expt, (io.ctrl.pc_sel === PC_EPC), ((io.ctrl.pc_sel === PC_ALU) || (brCond.io.taken)), (io.ctrl.pc_sel === PC_0),
+     io.ctrl.inst
+    //  io.ctrl.inst := fe_reg.inst
+   )
+  // val isRead  = RegInit(false.B)
+  // val isWrite = RegInit(false.B)
+  // val addr    = RegInit(0.U(39.W))
+  // val wdata   = RegInit(0.U)
+  // val width   = RegInit(0.U(log2Ceil(64 + 1).W))
+
+  // when(backend.io.dmem.isWrite()) {
+  //   isWrite := true.B
+  //   isRead  := false.B
+  //   addr  := backend.io.dmem.req.bits.addr
+  //   wdata := backend.io.dmem.req.bits.wdata
+  //   width := sz2wth(backend.io.dmem.req.bits.size)
+  // }
+  // when(backend.io.dmem.isRead()) {
+  //   isRead  := true.B
+  //   isWrite := false.B
+  //   addr  := backend.io.dmem.req.bits.addr
+  //   width := sz2wth(backend.io.dmem.req.bits.size)
+  // }
+  // val mem = rvspeccore.checker.ConnectCheckerResult.makeMemSource()(64)
+  // when(io.dcache.resp.valid) {
+  //     // load or store complete
+  //     when(isRead) {
+  //         isRead       := false.B
+  //         mem.read.valid := true.B
+  //         mem.read.addr  := SignExt(addr, 64)
+  //         mem.read.data  := backend.io.dmem.resp.bits.rdata
+  //         mem.read.memWidth := width
+  //     }.elsewhen(isWrite) {
+  //         isWrite       := false.B
+  //         mem.write.valid := true.B
+  //         mem.write.addr  := SignExt(addr, 64)
+  //         mem.write.data  := wdata
+  //         mem.write.memWidth := width
+  //         // pass addr wdata wmask
+  //     }.otherwise {
+  //         // assert(false.B)
+  //         // may receive some acceptable error resp, but microstructure can handle
+  //     }
+  // }
+
 }
