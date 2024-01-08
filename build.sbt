@@ -6,6 +6,8 @@ resolvers += "Sonatype OSS Snapshots" at "https://s01.oss.sonatype.org/content/r
 
 val chiselVersion = "3.5.4"
 
+lazy val riscvSpecCore = (project in file("riscv-spec-core"))
+
 lazy val root = (project in file("."))
   .settings(
     name := "riscv-mini",
@@ -22,3 +24,4 @@ lazy val root = (project in file("."))
     ),
     addCompilerPlugin("edu.berkeley.cs" % "chisel3-plugin" % chiselVersion cross CrossVersion.full),
   )
+  .dependsOn(riscvSpecCore)

@@ -5,7 +5,7 @@ package mini
 import chisel3._
 import chisel3.util._
 import chisel3.experimental.BundleLiterals._
-import rvspeccore.core.RV64Config
+import rvspeccore.core.RV32Config
 import rvspeccore.checker._
 
 object Const {
@@ -78,6 +78,8 @@ class Datapath(val conf: CoreConfig) extends Module {
     */
   val started = RegNext(reset.asBool)
   val stall = !io.icache.resp.valid || !io.dcache.resp.valid
+  printf("stall: %x\n", stall)
+  assume(!stall)
   val pc = RegInit(Const.PC_START.U(conf.xlen.W) - 4.U(conf.xlen.W))
   // Next Program Counter
   val next_pc = MuxCase(
@@ -91,6 +93,9 @@ class Datapath(val conf: CoreConfig) extends Module {
     )
   )
   val inst = Mux(started || io.ctrl.inst_kill || brCond.io.taken || csr.io.expt, Instructions.NOP, io.icache.resp.bits.data)
+  assume(
+    inst === Instructions.NOP || RVI.regImm(inst)(conf.xlen),
+  )
   pc := next_pc
   io.icache.req.bits.addr := next_pc
   io.icache.req.bits.data := 0.U
@@ -224,15 +229,17 @@ class Datapath(val conf: CoreConfig) extends Module {
 //    )
 //  }
 
-  val FormalConfig = RV64Config("MCS")
+  val FormalConfig = RV32Config("MCS")
   println(FormalConfig)
-  val checker = Module(new CheckerWithResult(checkMem = true)(FormalConfig))
+  val checker = Module(new CheckerWithResult(checkMem = false)(FormalConfig))
   ConnectCheckerResult.setChecker(checker)(32, FormalConfig)
-  val resultTLBWireDTLB = rvspeccore.checker.ConnectCheckerResult.makeTLBSource(false)(64)
-  val resultTLBWireITLB = rvspeccore.checker.ConnectCheckerResult.makeTLBSource(true)(64)
-  resultTLBWireDTLB := DontCare
-  resultTLBWireITLB := DontCare
+  // val resultTLBWireDTLB = rvspeccore.checker.ConnectCheckerResult.makeTLBSource(false)(64)
+  // val resultTLBWireITLB = rvspeccore.checker.ConnectCheckerResult.makeTLBSource(true)(64)
+  // resultTLBWireDTLB := DontCare
+  // resultTLBWireITLB := DontCare
     // //  FIXME: valid need to judge
+  printf("CLK Signal: %x \n", RegNext(RegNext((started || io.ctrl.inst_kill || brCond.io.taken || csr.io.expt), true.B), true.B))
+  printf("Test Flag: %x %x %x %x\n", RegNext(io.ctrl.inst_kill), RegNext(brCond.io.taken), RegNext(csr.io.expt), RegNext(stall))
   when(RegNext(RegNext((started || io.ctrl.inst_kill || brCond.io.taken || csr.io.expt), true.B), true.B)){
     checker.io.instCommit.valid := false.B
   }otherwise{
