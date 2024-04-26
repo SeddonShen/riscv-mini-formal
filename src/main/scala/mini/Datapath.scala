@@ -232,7 +232,7 @@ class Datapath(val conf: CoreConfig) extends Module {
   val FormalConfig = RV32Config("MCS")
   println(FormalConfig)
   val checker = Module(new CheckerWithResult(checkMem = false)(FormalConfig))
-  ConnectCheckerResult.setChecker(checker)(32, FormalConfig)
+  ConnectCheckerResult.setChecker(checker)(32)
   // val resultTLBWireDTLB = rvspeccore.checker.ConnectCheckerResult.makeTLBSource(false)(64)
   // val resultTLBWireITLB = rvspeccore.checker.ConnectCheckerResult.makeTLBSource(true)(64)
   // resultTLBWireDTLB := DontCare
