@@ -67,6 +67,10 @@ class CoreSoc(core: => Core)extends Module {
     }
   }
   cycle := cycle + 1.U
+  val mepc_val = Wire(UInt(xlen.W))
+  mepc_val := DontCare
+  BoringUtils.addSink(mepc_val, "mepc_wire")
+  assume(mepc_val(1,0) === "b00".U)
 }
 case class CoreConfig(
   xlen:       Int,

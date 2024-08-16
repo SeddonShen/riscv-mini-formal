@@ -4,6 +4,7 @@ package mini
 
 import chisel3._
 import chisel3.util._
+import chisel3.util.experimental.BoringUtils
 
 object CSR {
   val N = 0.U(3.W)
@@ -183,6 +184,7 @@ class CSR(val xlen: Int) extends Module {
   val mscratch = Reg(UInt(xlen.W))
 
   val mepc = Reg(UInt(xlen.W))
+  BoringUtils.addSource(mepc, "mepc_wire")
   val mcause = Reg(UInt(xlen.W))
   val mbadaddr = Reg(UInt(xlen.W))
 
