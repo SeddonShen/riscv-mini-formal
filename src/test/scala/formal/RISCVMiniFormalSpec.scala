@@ -66,7 +66,7 @@ object DefaultCoreConfig {
 }
 
 class RISCVMiniFormalSpec extends AnyFlatSpec with Formal with ChiselScalatestTester {
-  behavior of "RISCVMiniFormal_E1test"
+  behavior of "RISCVMiniFormal"
   // it should "pass simpletest" in {
   //   test(new CoreTester(new Core(DefaultCoreConfig()), "rv32ui-p-simple")).runUntilStop(10)
   // }
@@ -75,8 +75,10 @@ class RISCVMiniFormalSpec extends AnyFlatSpec with Formal with ChiselScalatestTe
   //      .emitSystemVerilog(new Core(DefaultCoreConfig()), Array("--target-dir", "test_run_dir/Elaborate_RVFI"))
   //  }
   it should "generate SoCVerilog" in {
+    val targetDir = sys.props.getOrElse("targetDir", "test_run_dir/GenerateSoCVerilog")
+    println("generate SoCVerilog targetDir: " + targetDir)
     (new chisel3.stage.ChiselStage)
-      .emitSystemVerilog(new CoreSoc(new Core(DefaultCoreConfig())), Array("--target-dir", "test_run_dir/Elaborate_RVFI"))
+      .emitSystemVerilog(new CoreSoc(new Core(DefaultCoreConfig())), Array("--target-dir", targetDir))
   }
   // it should "pass verify" in {
   //   verify(new Core(DefaultCoreConfig()), Seq(BoundedCheck(20), BtormcEngineAnnotation))
