@@ -340,10 +340,19 @@ class Datapath(val conf: CoreConfig) extends Module {
   mem.read.data  := io.dcache.resp.bits.data
   mem.read.memWidth := load_width
 //  printf("FlyWireMemDebug[read, expt:%d]:  Req valid:%d, addr:%x, data:%x, memWidth:%x load_mask:%x\n", csr.io.expt, (load_mask > 0.U), RegNext(mem.read.addr, 0.U), mem.read.data, load_mask, load_width)
-  printf("FlyWireMemDebug[write valid:%d, expt:%d]:  Width>0:%d, addr:%x, data:%x, memWidth:%x\n", RegNext(store_width > 0.U, false.B) && !csr.io.expt, csr.io.expt, store_width > 0.U, req_addr, mem_wdata, RegNext(store_width, 0.U))
 //  RegNext(store_width > 0.U && !csr.io.expt, false.B)
+  val wmask_seq = Seq.tabulate(4) { i =>
+    Mux(mem_wmask(i), 0xff.U(8.W), 0x00.U(8.W)) // 每个1位译码成ff，每个0位译码成00
+  }
+  val wmask_32bits = Cat(wmask_seq.reverse)
+printf("FlyWireMemDebug[mask: %x, %x][write valid:%d, expt:%d]:  Width>0:%d, addr:%x, data:%x, memWidth:%x \n", mem_wmask, wmask_32bits, RegNext(store_width > 0.U, false.B) && !csr.io.expt, csr.io.expt, store_width > 0.U, req_addr, mem_wdata, RegNext(store_width, 0.U))
   mem.write.valid := RegNext(store_width > 0.U, false.B) && !csr.io.expt
   mem.write.addr  := req_addr
-  mem.write.data  := mem_wdata
+  val shiftAmount = MuxLookup(req_addr(1, 0), 0.U(4.W), Array(
+    1.U -> 8.U,
+    2.U -> 16.U,
+    3.U -> 24.U
+  ))
+  mem.write.data  := (mem_wdata & wmask_32bits) >> shiftAmount
   mem.write.memWidth := RegNext(store_width, 0.U)
 }
