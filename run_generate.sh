@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 补丁文件数组
-patches=("patch/E1_SLTI.patch" "patch/E2_SUB.patch" "patch/E3_BNE.patch" "patch/E4_LB.patch" "patch/E5_ADDI.patch")
+patches=("patch/E1_SLTI.patch" "patch/E2_SUB.patch" "patch/E3_BNE.patch" "patch/E4_BLTU.patch" "patch/E5_ADDI.patch")
 
 
 # 计数器，用于文件夹命名
