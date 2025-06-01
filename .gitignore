@@ -34,3 +34,5 @@ ucli.key
 .DS_Store
 metals.sbt
 out/
+verification_files/SimTop_all/
+verification_files/results/
