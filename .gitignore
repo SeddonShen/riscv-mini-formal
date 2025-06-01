@@ -33,3 +33,4 @@ ucli.key
 
 .DS_Store
 metals.sbt
+out/

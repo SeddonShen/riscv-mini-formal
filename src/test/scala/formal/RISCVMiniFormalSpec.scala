@@ -1,6 +1,8 @@
 package formal
 
 import chisel3._
+import chisel3.stage.{ChiselCli, ChiselGeneratorAnnotation, ChiselStage}
+import firrtl.transforms.formal.DontAssertSubmoduleAssumptionsAnnotation
 import chisel3.testers._
 import chisel3.util.experimental.loadMemoryFromFileInline
 import chiseltest._
@@ -65,8 +67,8 @@ object DefaultCoreConfig {
   def apply() = MiniConfig().core
 }
 
-class RISCVMiniFormalSpec extends AnyFlatSpec with Formal with ChiselScalatestTester {
-  behavior of "RISCVMiniFormal_E5"
+class RISCVMiniFormalSpecBtor extends AnyFlatSpec with Formal with ChiselScalatestTester {
+  behavior of "RISCVMiniFormal"
 //   it should "pass simpletest" in {
 //     test(new CoreTester(new Core(DefaultCoreConfig()), "rv32ui-p-simple")).runUntilStop(10)
 //   }
@@ -80,5 +82,18 @@ class RISCVMiniFormalSpec extends AnyFlatSpec with Formal with ChiselScalatestTe
 // }
   it should "pass verify" in {
     verify(new CoreSoc(new Core(DefaultCoreConfig())), Seq(BoundedCheck(20), BtormcEngineAnnotation))
+  }
+}
+
+class RISCVMiniFormalSpecSV extends AnyFlatSpec with Formal with ChiselScalatestTester {
+  behavior of "RISCVMiniFormal"
+  it should "pass verify" in {
+    (new ChiselStage).execute(
+      Array("--target-dir", "test_run_dir/Elaborate_chirvformal_SystemVerilog", "-X", "sverilog"),
+      Seq(
+        DontAssertSubmoduleAssumptionsAnnotation,
+        ChiselGeneratorAnnotation(() => new CoreSoc(new Core(DefaultCoreConfig())))
+      )
+    )
   }
 }

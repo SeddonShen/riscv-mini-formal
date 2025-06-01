@@ -1,5 +1,15 @@
 # riscv-mini
 
+## 修改说明
+关于接入最新参考模型的修改版本
+```bash
+# Compile to generate transition system for formal verification
+# for btor2 format
+mill chiselModule.test.testOnly formal.RISCVMiniFormalSpecBtor
+# for SystemVerilog format (to Symbiyosys)
+mill chiselModule.test.testOnly formal.RISCVMiniFormalSpecSV
+```
+
 Author: Donggyu Kim (dgkim@eecs.berkeley.edu)
 
 `riscv-mini` is a simple RISC-V 3-stage pipeline written in Chisel. It has been a crucial example in various project developments,
