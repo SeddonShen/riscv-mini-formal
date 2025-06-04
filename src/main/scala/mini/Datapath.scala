@@ -91,6 +91,10 @@ class Datapath(val conf: CoreConfig) extends Module {
       (io.ctrl.pc_sel === PC_0) -> pc
     )
   )
+  when(io.ctrl.imm_sel === IMM_B || io.ctrl.imm_sel === IMM_J) {
+    assume(alu.io.sum(1,0) === 0.U)
+  }
+  assume(next_pc(1,0) === 0.U)
   val jump = BoringUtils.addSource(csr.io.expt || RegNext(stall || (io.ctrl.pc_sel === PC_EPC) || (io.ctrl.pc_sel === PC_ALU) || (brCond.io.taken) || (io.ctrl.pc_sel === PC_0), 0.U).asBool,  "Jumpornot")
   BoringUtils.addSource(Mux(csr.io.expt, next_pc, RegNext(next_pc, 0.U)), "rvfiio_pc_jump_data")
 //  printf("[PC Calc] stall:%d, expt:%d, pc_sel:%d Taken:%d pc:%x next_pc:%x \n", stall, csr.io.expt, io.ctrl.pc_sel, (brCond.io.taken), pc, next_pc)
@@ -285,9 +289,14 @@ class Datapath(val conf: CoreConfig) extends Module {
   BoringUtils.addSource(ew_reg.inst, "rvfiio_insn")
   val flywire_rs1_addr = Wire(UInt(5.W))
   val flywire_rs2_addr = Wire(UInt(5.W))
+  val npc = WireInit(0.U(32.W))
+  val rs1_fv = WireInit(0.U(32.W))
+  val rs2_fv = WireInit(0.U(32.W))
+  BoringUtils.addSink(rs1_fv, "rv_rs1")
+  BoringUtils.addSink(rs2_fv, "rv_rs2")
   flywire_rs1_addr := Mux(RegNext(io.ctrl.A_sel === A_RS1, 0.U).asBool || RegNext(io.ctrl.br_type =/= 0.U, 0.U).asBool, ew_reg.inst(19, 15), 0.U)
   flywire_rs2_addr := Mux(RegNext(io.ctrl.B_sel === B_RS2, 0.U).asBool || RegNext(io.ctrl.st_type =/= 0.U, 0.U).asBool || RegNext(io.ctrl.br_type =/= 0.U, 0.U).asBool, ew_reg.inst(24, 20), 0.U)
-
+  BoringUtils.addSink(npc, "rv_npc")
 //  printf("Load and Store[%x %x]: Inst:%x, %x %x, RS1:%d, RS2:%d\n", RegNext(io.ctrl.ld_type, 0.U), RegNext(io.ctrl.st_type, 0.U), ew_reg.inst, io.ctrl.A_sel, io.ctrl.B_sel, ew_reg.inst(19, 15), ew_reg.inst(24, 20))
   BoringUtils.addSource(flywire_rs1_addr, "rvfiio_rs1_addr")
   BoringUtils.addSource(flywire_rs2_addr, "rvfiio_rs2_addr")
@@ -308,13 +317,24 @@ class Datapath(val conf: CoreConfig) extends Module {
     ),
     formal    = Seq("ArbitraryRegFile")
   )
-  val checker = Module(new CheckerWithResult(checkMem = true)(rvConfig))
+  val checker = Module(new CheckerWithWB(checkMem = true, checkNPC = true)(rvConfig))
   checker.io.instCommit.valid := instCommit
   checker.io.instCommit.inst  := ew_reg.inst
   checker.io.instCommit.pc    := ew_reg.pc
-  checker.io.instCommit.npc   := 0.U
-  ConnectCheckerResult.setChecker(checker)(32, rvConfig)
-  val mem = rvspeccore.checker.ConnectCheckerResult.makeMemSource()(32)
+  checker.io.instCommit.npc   := npc
+
+  checker.io.wb.valid := wb_en && !stall && !csr.io.expt
+  checker.io.wb.dest := wb_rd_addr
+  checker.io.wb.data := Mux(wb_rd_addr === 0.U, 0.U ,regWrite)
+  checker.io.wb.r1Addr := flywire_rs1_addr
+  checker.io.wb.r2Addr := flywire_rs2_addr
+  checker.io.wb.r1Data := rs1_fv
+  checker.io.wb.r2Data := rs2_fv
+  checker.io.wb.csrAddr := 0.U
+  checker.io.wb.csrNdata := 0.U
+  checker.io.wb.csrWr := false.B
+  ConnectCheckerWb.setChecker(checker)(32, rvConfig)
+  val mem = rvspeccore.checker.ConnectCheckerWb.makeMemSource()(32)
 ////  load_mask > 0 , then valid
 
   val load_width = MuxLookup(ld_type, "b0000".U)(

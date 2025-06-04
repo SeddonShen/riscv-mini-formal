@@ -185,6 +185,7 @@ class CSR(val xlen: Int) extends Module {
   val mscratch = Reg(UInt(xlen.W))
 
   val mepc = Reg(UInt(xlen.W))
+ // assume(mepc(1,0) === 0.U)
   val mcause = Reg(UInt(xlen.W))
   val mbadaddr = Reg(UInt(xlen.W))
 
@@ -334,10 +335,10 @@ class CSR(val xlen: Int) extends Module {
     ),
     formal    = Seq("ArbitraryRegFile")
   )
-  val resultEventWire = rvspeccore.checker.ConnectCheckerResult.makeEventSource()(32, rvConfig)
-  resultEventWire.valid := io.expt
-  resultEventWire.intrNO := 0.U
-  resultEventWire.cause := exception_case
-  resultEventWire.exceptionPC := io.pc >> 2 << 2
-  resultEventWire.exceptionInst := io.inst
+  // val resultEventWire = rvspeccore.checker.ConnectCheckerResult.makeEventSource()(32, rvConfig)
+  // resultEventWire.valid := io.expt
+  // resultEventWire.intrNO := 0.U
+  // resultEventWire.cause := exception_case
+  // resultEventWire.exceptionPC := io.pc >> 2 << 2
+  // resultEventWire.exceptionInst := io.inst
 }

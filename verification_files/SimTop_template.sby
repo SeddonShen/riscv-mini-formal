@@ -1,6 +1,6 @@
 [options]
 mode bmc
-depth 30
+depth 6
 
 [engines]
 smtbmc boolector
@@ -13,6 +13,6 @@ prep -top VerifyTop
 chformal -remove -assert c:{assert_label} %n
 
 [files]
-../CoreSoc_assert_renamed.sv
-../define.sv
-../Core.sv
+./CoreSoc_assert_renamed.sv
+./define.sv
+./Core.sv

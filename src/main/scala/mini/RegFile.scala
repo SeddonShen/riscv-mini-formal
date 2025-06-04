@@ -20,16 +20,16 @@ class RegFile(xlen: Int) extends Module {
   val io = IO(new RegFileIO(xlen))
 //  val regs = Mem(32, UInt(xlen.W))
 //  val regs = RegInit(VecInit(Seq.fill(32)(0.U(xlen.W))))
-//  val regs = Reg(Vec(32, UInt(xlen.W)))
-  val regs = RegInit(ArbitraryRegFile.gen(xlen))
-  val resultRegWire = Wire(Vec(32, UInt(xlen.W)))
-  resultRegWire := regs
-  resultRegWire(0) := 0.U
-  ConnectCheckerResult.setRegSource(resultRegWire)
+  val regs = Reg(Vec(32, UInt(xlen.W)))
+  //val regs = RegInit(ArbitraryRegFile.gen(xlen))
+  // val resultRegWire = Wire(Vec(32, UInt(xlen.W)))
+  // resultRegWire := regs
+  // resultRegWire(0) := 0.U
+  // ConnectCheckerResult.setRegSource(resultRegWire)
   io.rdata1 := Mux(io.raddr1.orR, regs(io.raddr1), 0.U)
   io.rdata2 := Mux(io.raddr2.orR, regs(io.raddr2), 0.U)
   when(io.wen & io.waddr.orR) {
     regs(io.waddr) := io.wdata
-    resultRegWire(io.waddr) := io.wdata
+    //resultRegWire(io.waddr) := io.wdata
   }
 }

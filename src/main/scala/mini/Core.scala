@@ -43,6 +43,10 @@ class RVFIIO extends Bundle {
 
 class CoreSoc(core: => Core)extends Module {
   val rvfi   = IO(new RVFIIO)
+  // val io = IO(new Bundle{
+  //   val randreg = Vec(2,Input(UInt(32.W)))
+  // })
+  //BoringUtils.addSource(io.randreg, "RandReg")
   val dut = Module(core)
   val xlen = dut.conf.xlen
   dut.io.host.fromhost.bits := DontCare
@@ -162,6 +166,8 @@ class Core(val conf: CoreConfig) extends Module {
   }.otherwise{
     rvfi_con.rd_wdata := rd_wdata_ssd
   }
+  BoringUtils.addSource(rvfi.rs1_rdata, "rv_rs1")
+  BoringUtils.addSource(rvfi.rs2_rdata, "rv_rs2")
   // BoringUtils.addSink(rvfi.rs1_addr, "rvfiio_rs1_addr")
   // BoringUtils.addSink(rvfi.rs2_addr, "rvfiio_rs2_addr")
   BoringUtils.addSink(rvfi_con.rd_addr, "rvfiio_rd_addr")
@@ -202,6 +208,7 @@ class Core(val conf: CoreConfig) extends Module {
   }.otherwise{
     rvfi.pc_wdata := rvfi.pc_rdata + 4.U
   }
+  BoringUtils.addSource(rvfi.pc_wdata, "rv_npc")
 //  printf("RESP:%x\n", rvfi_con.mem_rdata)
   val tmpAssume = !rvfi.valid || (
     RVI.regImm(rvfi.insn)(conf.xlen)
